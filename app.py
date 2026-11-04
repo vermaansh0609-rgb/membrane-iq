@@ -15,7 +15,7 @@ water_type = st.sidebar.selectbox("Feed Water Source", ["Municipal Tap", "Mixed 
 daily_usage_liters = st.sidebar.slider("Daily Consumption (Liters)", min_value=5, max_value=40, value=15)
 turbidity_spike = st.sidebar.checkbox("Simulate Heavy Silt / Turbidity Event")
 
-# Physics Constants (Calibrated Darcy Formulation)
+# Physics Constants (Darcy Formulation)
 clean_membrane_res = 1.0e11
 viscosity = 0.001
 differential_pressure = 400000.0  # 4 bar in Pa
@@ -25,22 +25,22 @@ critical_fouling_threshold = 4.5e11
 def generate_simulation_data(water_source, usage, spike):
     days = np.arange(1, 181)
     fouling_rates = {
-        "Municipal Tap": 2.2e8,
-        "Mixed Tanker Supply": 3.8e8,
-        "Borewell": 5.6e8
+        "Municipal Tap": 2.0e7,
+        "Mixed Tanker Supply": 3.4e7,
+        "Borewell": 4.8e7
     }
     base_rate = fouling_rates[water_source]
     np.random.seed(42)
-    noise = np.random.normal(0, 0.02e11, len(days))
+    noise = np.random.normal(0, 0.015e11, len(days))
     fouling_growth = (days * (usage / 15.0) * base_rate * 30) + noise
     
     if spike:
-        fouling_growth[60:] += 1.4e11
+        fouling_growth[70:] += 1.1e11
         
     dynamic_resistance = clean_membrane_res + np.maximum(fouling_growth, 0)
     
-    # Virtual Flow Rate calculation (scaled to typical domestic RO: ~0.25 to 0.45 LPM)
-    flow_rate = (differential_pressure / (viscosity * dynamic_resistance)) * 1.0e-7 * 60
+    # Virtual Flow Rate calculation (standard domestic RO: 0.15 - 0.40 LPM)
+    flow_rate = (differential_pressure / (viscosity * dynamic_resistance)) * 0.9e-4 * 60
     
     return pd.DataFrame({
         "Day": days,
@@ -52,7 +52,7 @@ def generate_simulation_data(water_source, usage, spike):
 df = generate_simulation_data(water_type, daily_usage_liters, turbidity_spike)
 
 # Prognostic Regression
-current_day = st.slider("Simulated Operational Day", min_value=10, max_value=170, value=50)
+current_day = st.slider("Simulated Operational Day", min_value=10, max_value=170, value=45)
 observed = df[df["Day"] <= current_day]
 
 reg = LinearRegression()
@@ -78,7 +78,7 @@ c3.metric("Projected Safe Lifespan", f"{remaining_days} Days")
 
 if remaining_days <= 10 or health_index < 15.0:
     c4.error("CRITICAL: REPLACE FILTER")
-elif remaining_days <= 30:
+elif remaining_days <= 25:
     c4.warning("MAINTENANCE ADVISORY")
 else:
     c4.success("SYSTEM NORMAL")
