@@ -35,12 +35,12 @@ def generate_simulation_data(water_source, usage, spike):
     fouling_growth = (days * (usage / 15.0) * base_rate * 30) + noise
     
     if spike:
-        fouling_growth[65:] += 1.4e11
+        fouling_growth[50:] += 1.2e11
         
     dynamic_resistance = clean_membrane_res + np.maximum(fouling_growth, 0)
     
-    # Virtual Flow Rate calculation (standard domestic RO: 0.15 - 0.35 LPM)
-    flow_rate = (differential_pressure / (viscosity * dynamic_resistance)) * 7.5e-5 * 60
+    # Virtual Flow Rate calculation (scaled to realistic domestic RO output: ~0.10 to 0.35 LPM)
+    flow_rate = (clean_membrane_res / dynamic_resistance) * 0.32
     
     return pd.DataFrame({
         "Day": days,
