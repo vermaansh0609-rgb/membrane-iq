@@ -7,7 +7,7 @@ from sklearn.linear_model import LinearRegression
 st.set_page_config(page_title="MembraneIQ - Digital Twin", layout="wide")
 
 st.title("MembraneIQ: Dynamic Water Purifier Prognostics & Virtual Sensing")
-st.markdown("**Track 2: Water Purifier** | Physics-guided digital twin estimating membrane fouling and remaining useful life.")
+st.markdown("Physics-guided digital twin estimating membrane fouling and remaining useful life.")
 
 # Sidebar Controls
 st.sidebar.header("Input Water Parameters")
